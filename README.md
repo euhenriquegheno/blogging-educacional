@@ -198,8 +198,8 @@ para `main`:
 2. `validate-frontend`: instala dependências, roda os testes e builda o
    frontend.
 3. `publish-image` (somente em push para `main`, após os dois anteriores
-   passarem): publica no Docker Hub as imagens `api-blogging` (backend) e
-   `api-blogging-frontend` (frontend), com as tags `latest` e o hash do
+   passarem): publica no Docker Hub as imagens `blogging-educacional` (backend) e
+   `blogging-educacional-frontend` (frontend), com as tags `latest` e o hash do
    commit.
 
 Configure estes secrets no GitHub:

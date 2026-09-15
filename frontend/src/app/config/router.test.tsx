@@ -22,7 +22,7 @@ vi.mock('../../features/posts/api/comentarios-api', () => ({
   createComentario: vi.fn(),
 }))
 
-const TOKEN_STORAGE_KEY = 'api-blogging:token'
+const TOKEN_STORAGE_KEY = 'blogging-educacional:token'
 
 const postMock: Publicacao = {
   id: '42',

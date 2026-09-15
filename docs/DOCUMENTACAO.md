@@ -157,7 +157,7 @@ para o passo a passo completo.
   e `validate-frontend`) instalam dependências, rodam os testes e fazem o
   build de cada aplicação. Em push para `main`, após os dois jobs
   passarem, o job `publish-image` builda e publica no Docker Hub as
-  imagens `api-blogging` (backend) e `api-blogging-frontend` (frontend),
+  imagens `blogging-educacional` (backend) e `blogging-educacional-frontend` (frontend),
   com as tags `latest` e o hash do commit.
 
 ## 5. Relato de experiências e desafios

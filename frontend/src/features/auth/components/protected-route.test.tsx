@@ -5,7 +5,7 @@ import { criarTokenFake } from '../../../test/jwt'
 import { AuthProvider } from '../context/auth-context'
 import { ProtectedRoute } from './protected-route'
 
-const TOKEN_STORAGE_KEY = 'api-blogging:token'
+const TOKEN_STORAGE_KEY = 'blogging-educacional:token'
 
 function renderizarComRotas(initialEntries: string[]) {
   return render(

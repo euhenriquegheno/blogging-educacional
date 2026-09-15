@@ -9,7 +9,7 @@ describe('comentarios-api', () => {
 
   describe('createComentario', () => {
     it('envia POST /posts/:id/comments com o header Authorization presente', async () => {
-      localStorage.setItem('api-blogging:token', 'jwt-token-123')
+      localStorage.setItem('blogging-educacional:token', 'jwt-token-123')
 
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(

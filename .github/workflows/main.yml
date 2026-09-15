@@ -96,8 +96,8 @@ jobs:
           target: production
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/blogging-educacional:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/blogging-educacional:${{ github.sha }}
 
       - name: Build and publish frontend image
         uses: docker/build-push-action@v6
@@ -106,5 +106,5 @@ jobs:
           target: production
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging-frontend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging-frontend:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/blogging-educacional-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/blogging-educacional-frontend:${{ github.sha }}

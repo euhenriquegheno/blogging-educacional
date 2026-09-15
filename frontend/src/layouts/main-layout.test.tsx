@@ -5,7 +5,7 @@ import { criarTokenFake } from '../test/jwt'
 import { AuthProvider } from '../features/auth/context/auth-context'
 import MainLayout from './main-layout'
 
-const TOKEN_STORAGE_KEY = 'api-blogging:token'
+const TOKEN_STORAGE_KEY = 'blogging-educacional:token'
 
 function renderizarLayout() {
   return render(

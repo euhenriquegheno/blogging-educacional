@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { criarTokenFake } from '../../../test/jwt'
 import { AuthProvider, useAuth } from './auth-context'
 
-const TOKEN_STORAGE_KEY = 'api-blogging:token'
+const TOKEN_STORAGE_KEY = 'blogging-educacional:token'
 
 function ConsumidorDeTeste() {
   const { usuario, token, signIn, signOut } = useAuth()

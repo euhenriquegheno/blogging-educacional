@@ -1,4 +1,4 @@
-const TOKEN_STORAGE_KEY = 'api-blogging:token'
+const TOKEN_STORAGE_KEY = 'blogging-educacional:token'
 
 /**
  * Erro tipado lançado pelo apiClient quando a API responde com um status

@@ -1,0 +1,49 @@
+# Dependências
+node_modules/
+.npm-cache/
+.pnp.*
+
+# Build e arquivos gerados
+build/
+dist/
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+
+# Segredos e variáveis de ambiente
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+
+# Banco de dados local
+*.sqlite
+*.sqlite3
+*.db
+/mysql-data/
+/data/mysql/
+docker/mysql/data/
+*.sql.gz
+*.dump
+
+# Uploads e mídia
+/uploads/
+backend/uploads/
+frontend/public/uploads/
+storage/
+
+# Cache e logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+coverage/
+.eslintcache
+.vite/
+.turbo/
+.cache/
+
+# SO e editor
+.DS_Store
+Thumbs.db

@@ -1,0 +1,110 @@
+name: CI and Docker Hub
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-backend:
+    name: Validate backend
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 3306
+      DATABASE_USER: test
+      DATABASE_PASSWORD: test
+      DATABASE_NAME: test
+      JWT_SECRET: test-secret
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: backend
+        run: npm run test:coverage
+
+      - name: Build application
+        working-directory: backend
+        run: npm run build
+
+  validate-frontend:
+    name: Validate frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend
+        run: npm run test
+
+      - name: Build application
+        working-directory: frontend
+        run: npm run build
+
+  publish-image:
+    name: Publish Docker images
+    needs: [validate-backend, validate-frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and publish backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          target: production
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging:${{ github.sha }}
+
+      - name: Build and publish frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          target: production
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-blogging-frontend:${{ github.sha }}

@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentação</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="documentação-do-projeto-—-api-blogging">Documentação do Projeto — API Blogging</h1>
+<h2 id="visão-geral">1. Visão geral</h2>
+<p>O <strong>API Blogging</strong> é um blog institucional onde professores publicam</p>
+<p>materiais para a comunidade acadêmica. O projeto parte de uma API REST já</p>
+<p>existente (Fastify + TypeORM, originalmente em PostgreSQL, com CRUD de</p>
+<p>posts e usuários) e evolui em duas frentes:</p>
+<ul>
+<li><strong>Backend</strong>: migração do banco para MySQL, autenticação via JWT,</li>
+</ul>
+<p>autorização por tipo de usuário e um novo recurso de comentários.</p>
+<ul>
+<li><strong>Frontend</strong>: uma interface React que consome a API acima, com áreas</li>
+</ul>
+<p>distintas para visitantes, alunos, professores e administradores.</p>
+<h2 id="arquitetura">2. Arquitetura</h2>
+<h3 id="visão-em-camadas">2.1 Visão em camadas</h3>
+<ul>
+<li><strong>Controllers</strong> recebem a requisição HTTP, validam o corpo/parâmetros com</li>
+</ul>
+<p>Zod e delegam a regra de negócio ao use case correspondente.</p>
+<ul>
+<li><strong>Use cases</strong> concentram as regras de negócio (autenticar usuário, criar</li>
+</ul>
+<p>post, verificar se o professor é dono do post antes de editar/excluir</p>
+<p>etc.), sem depender diretamente do Fastify ou do TypeORM.</p>
+<ul>
+<li><strong>Repositories</strong> isolam o acesso ao banco (TypeORM), permitindo trocar a</li>
+</ul>
+<p>implementação (por exemplo, repositórios em memória usados nos testes)</p>
+<p>sem alterar as regras de negócio.</p>
+<ul>
+<li><strong>Entities</strong> (TypeORM) definem as tabelas <code>usuario</code>, <code>publicacao</code> e</li>
+</ul>
+<p><code>comentario</code> e os relacionamentos entre elas.</p>
+<ul>
+<li>No <strong>frontend</strong>, cada feature (<code>auth</code>, <code>posts</code>) concentra sua própria</li>
+</ul>
+<p>camada de API (<code>*-api.ts</code>), componentes e, no caso de <code>auth</code>, o contexto</p>
+<p>de sessão. As páginas (<code>src/pages</code>) compõem esses blocos e são registradas</p>
+<p>no roteador central (<code>src/app/config/router.tsx</code>).</p>
+<h3 id="modelo-de-dados">2.2 Modelo de dados</h3>
+<pre><code>
+USUARIO {
+
+int id
+
+string nome
+
+string email
+
+string senha_hash
+
+string cpf
+
+enum tipo "ADMINISTRADOR | PROFESSOR | ALUNO"
+
+}
+
+PUBLICACAO {
+
+uuid id
+
+string titulo
+
+text conteudo
+
+int usuario_id
+
+}
+
+COMENTARIO {
+
+uuid id
+
+text conteudo
+
+datetime criadoEm
+
+int usuario_id
+
+uuid publicacao_id
+
+}
+
+</code></pre>
+<p>O campo <code>tipo</code> do usuário (enum <code>TipoUsuario</code>: <code>ADMINISTRADOR = 1</code>,</p>
+<p><code>PROFESSOR = 2</code>, <code>ALUNO = 3</code>) é a base de toda a autorização do sistema,</p>
+<p>tanto no backend (middlewares) quanto no frontend (guarda de rotas e</p>
+<p>navegação condicional).</p>
+<h3 id="autenticação-e-autorização">2.3 Autenticação e autorização</h3>
+<ul>
+<li><code>POST /login</code> recebe <code>email</code>/<code>senha</code>, valida a senha com <code>bcrypt.compare</code></li>
+</ul>
+<p>contra o hash armazenado e assina um JWT (<code>@fastify/jwt</code>) com payload</p>
+<p><code>{ sub: usuario.id, tipo: usuario.tipo }</code> e validade de <strong>24 horas</strong>.</p>
+<ul>
+<li>O middleware <code>verifyJwt</code> protege rotas que exigem autenticação,</li>
+</ul>
+<p>retornando <code>401</code> quando o token está ausente ou inválido.</p>
+<ul>
+<li>O middleware <code>verifyUserType([...tipos])</code> retorna <code>403</code> quando o usuário</li>
+</ul>
+<p>autenticado não pertence a um dos tipos permitidos para a rota.</p>
+<ul>
+<li>Regra de posse: um Professor só edita/exclui os próprios posts (o use</li>
+</ul>
+<p>case compara <code>usuario.id</code> com o <code>usuario_id</code> da publicação e lança</p>
+<p><code>ForbiddenError</code> em caso de divergência); o Administrador tem acesso</p>
+<p>irrestrito a qualquer post e é o único que pode criar contas de usuário.</p>
+<ul>
+<li>No frontend, o <code>AuthProvider</code> decodifica o JWT, mantém a sessão em</li>
+</ul>
+<p><code>localStorage</code> e expõe <code>usuario</code>/<code>token</code> via <code>useAuth()</code>. O componente</p>
+<p><code>ProtectedRoute</code> usa esse contexto para redirecionar para <code>/login</code></p>
+<p>(sem sessão) ou para <code>/</code> (sessão válida, mas tipo não autorizado).</p>
+<h3 id="infraestrutura-e-containers">2.4 Infraestrutura e containers</h3>
+<p>| Serviço | Papel | Porta (produção) | Porta (dev) |</p>
+<p>|—|---|—|---|</p>
+<p>| <code>db</code> | MySQL 8, com healthcheck | 3306 | 3306 |</p>
+<p>| <code>api</code> | Backend Fastify | 3000 | 3000 (hot reload via <code>tsx watch</code>) |</p>
+<p>| <code>web</code> | Frontend servido por Nginx (build estático) | 8080 | 5173 (Vite dev server) |</p>
+<p>Os Dockerfiles de backend e frontend usam multi-stage builds com estágios</p>
+<p><code>development</code> e <code>production</code>, selecionados via <code>target</code> em cada</p>
+<p><code>docker-compose*.yml</code>. Em desenvolvimento, o código-fonte é montado como</p>
+<p>volume para permitir hot reload; em produção, apenas os artefatos</p>
+<p>compilados (backend) ou o build estático (frontend, servido por Nginx com</p>
+<p>fallback de rotas para suportar o React Router) entram na imagem final.</p>
+<h2 id="guia-de-uso">3. Guia de uso</h2>
+<h3 id="subindo-o-projeto">3.1 Subindo o projeto</h3>
+<p>Veja o passo a passo completo (local e via Docker) no <a href="../README.md"><code>README.md</code></a>.</p>
+<p>Resumo:</p>
+<pre class=" language-bash"><code class="prism  language-bash">
+<span class="token comment"># Produção (stack completa)</span>
+
+<span class="token function">cp</span>  .env.example  .env
+
+<span class="token function">cp</span>  backend/.env.example  backend/.env
+
+docker  compose  up  --build
+
+<span class="token comment"># API em http://localhost:3000 (docs em /docs) | Frontend em http://localhost:8080</span>
+
+  
+
+<span class="token comment"># Desenvolvimento (hot reload)</span>
+
+docker  compose  -f  docker-compose.dev.yml  up  --build
+
+<span class="token comment"># API em http://localhost:3000 | Frontend em http://localhost:5173</span>
+
+</code></pre>
+<h3 id="fluxos-por-perfil-de-usuário">3.2 Fluxos por perfil de usuário</h3>
+<ul>
+<li><strong>Visitante (não autenticado)</strong>: acessa a listagem de posts (com busca e</li>
+</ul>
+<p>paginação) e a leitura de um post completo, incluindo os comentários já</p>
+<p>existentes. Não vê o formulário de comentário nem qualquer ação de</p>
+<p>criação/edição.</p>
+<ul>
+<li><strong>Aluno</strong>: além do que o visitante vê, consegue comentar em qualquer</li>
+</ul>
+<p>post depois de autenticado.</p>
+<ul>
+<li><strong>Professor</strong>: cria novos posts (<code>/posts/novo</code>) e edita/exclui apenas os</li>
+</ul>
+<p>próprios posts. Tentar acessar a área administrativa redireciona para a</p>
+<p>página inicial.</p>
+<ul>
+<li><strong>Administrador</strong>: acessa a área administrativa (<code>/admin</code>), que lista</li>
+</ul>
+<p>todos os posts do sistema com opções de editar/excluir qualquer um deles,</p>
+<p>e cria novas contas de usuário definindo o <code>tipo</code> (Administrador,</p>
+<p>Professor ou Aluno).</p>
+<p>Como não há self-signup <strong>e</strong> todas as rotas de <code>/user</code> exigem um</p>
+<p>Administrador já autenticado, um banco novo não tem nenhuma conta — não dá</p>
+<p>para criar o primeiro Administrador pelo Swagger nem pela interface. Por</p>
+<p>isso existe o script <code>backend/src/scripts/seed-admin.ts</code></p>
+<p>(<code>npm run seed:admin</code> local, ou `docker compose exec api node</p>
+<p>build/scripts/seed-admin.js` em qualquer um dos composes), que cria um</p>
+<p>Administrador padrão (<code>admin@blog.com</code> / <code>admin123</code>, customizável por</p>
+<p>variáveis de ambiente) caso nenhum usuário exista ainda. Veja o</p>
+<p><a href="../README.md#primeiro-acesso-criar-o-administrador-inicial"><code>README.md</code></a></p>
+<p>para o passo a passo completo.</p>
+<h2 id="testes-e-integração-contínua">4. Testes e integração contínua</h2>
+<ul>
+<li><strong>Backend</strong>: testes unitários com Jest, cobrindo casos de uso (login,</li>
+</ul>
+<p>autorização por posse do post, CRUD de posts/usuários, criação e</p>
+<p>listagem de comentários) e testes de rota com <code>app.inject</code> para os</p>
+<p>códigos de status (<code>401</code>/<code>403</code>/<code>200</code>/<code>201</code>). Cobertura mínima exigida:</p>
+<p>20% em linhas, instruções, funções e branches.</p>
+<ul>
+<li><strong>Frontend</strong>: testes de componente/página com Vitest + Testing Library,</li>
+</ul>
+<p>cobrindo formulários (login, criação/edição de post, criação de usuário),</p>
+<p>guarda de rotas e navegação condicional por tipo de usuário, usando</p>
+<p>mocks de <code>fetch</code> para isolar a camada de API.</p>
+<ul>
+<li><strong>CI (GitHub Actions — <code>.github/workflows/main.yml</code>)</strong>: em cada pull</li>
+</ul>
+<p>request e push para <code>main</code>, dois jobs independentes (<code>validate-backend</code></p>
+<p>e <code>validate-frontend</code>) instalam dependências, rodam os testes e fazem o</p>
+<p>build de cada aplicação. Em push para <code>main</code>, após os dois jobs</p>
+<p>passarem, o job <code>publish-image</code> builda e publica no Docker Hub as</p>
+<p>imagens <code>api-blogging</code> (backend) e <code>api-blogging-frontend</code> (frontend),</p>
+<p>com as tags <code>latest</code> e o hash do commit.</p>
+<h2 id="relato-de-experiências-e-desafios">5. Relato de experiências e desafios</h2>
+<p>O desenvolvimento partiu de uma API já existente (CRUD de posts e usuários</p>
+<p>em PostgreSQL, sem autenticação) e evoluiu em etapas bem delimitadas, o que</p>
+<p>trouxe alguns desafios específicos:</p>
+<ul>
+<li><strong>Migração de PostgreSQL para MySQL</strong>: o maior cuidado foi garantir que a</li>
+</ul>
+<p>troca de driver do TypeORM (<code>pg</code> → <code>mysql2</code>) não alterasse o</p>
+<p>comportamento das entidades já existentes, além de modelar corretamente</p>
+<p>o serviço de banco no Docker Compose (imagem <code>mysql:8</code>, variáveis de</p>
+<p>ambiente, volume nomeado e <code>healthcheck</code> via <code>mysqladmin ping</code>) para que</p>
+<p>o container da API só suba depois do banco estar realmente saudável</p>
+<p>(<code>depends_on.condition: service_healthy</code>).</p>
+<ul>
+<li><strong>Autenticação e autorização retroativas</strong>: como as rotas de posts e</li>
+</ul>
+<p>usuários já existiam sem proteção, foi preciso introduzir os middlewares</p>
+<p>de JWT e de tipo de usuário sem quebrar os testes existentes, e reforçar</p>
+<p>a regra de “posse” do post (Professor só edita/exclui o próprio</p>
+<p>conteúdo) diretamente nos casos de uso, não apenas na camada HTTP —</p>
+<p>garantindo que a regra valesse tanto para a API quanto para qualquer</p>
+<p>cliente futuro.</p>
+<ul>
+<li><strong>Consistência entre backend e frontend</strong>: o campo <code>tipo</code> do usuário</li>
+</ul>
+<p>precisou de uma fonte única de verdade (o enum <code>TipoUsuario</code>) replicada</p>
+<p>de forma consistente na guarda de rotas do frontend</p>
+<p>(<code>ProtectedRoute</code>) e nos middlewares do backend, para evitar</p>
+<p>divergência entre o que a interface permite navegar e o que a API</p>
+<p>realmente autoriza.</p>
+<ul>
+<li><strong>Containerização do frontend para a entrega final</strong>: como o frontend</li>
+</ul>
+<p>foi construído depois do backend já estar consolidado, foi necessário</p>
+<p>criar um Dockerfile multi-stage próprio (build com Vite + Node e serving</p>
+<p>estático via Nginx, com fallback de rotas para o React Router) e um novo</p>
+<p>job de CI, mantendo os dois serviços (<code>api</code> e <code>web</code>) validados e</p>
+<p>publicados de forma independente, mas coordenados pelo mesmo</p>
+<p><code>docker-compose.yml</code>.</p>
+<ul>
+<li><strong>Testes de UI dependentes de rede</strong>: como o frontend usa <code>fetch</code></li>
+</ul>
+<p>nativo, os testes de página precisaram mockar consistentemente as</p>
+<p>chamadas HTTP para isolar o comportamento da interface do</p>
+<p>comportamento real da API, mantendo os testes rápidos e determinísticos.</p>
+<ul>
+<li><strong>Bootstrap do primeiro Administrador</strong>: como não há self-signup e as</li>
+</ul>
+<p>rotas de <code>/user</code> exigem um Administrador autenticado, um banco novo</p>
+<p>fica sem nenhuma forma de criar a primeira conta — um problema clássico</p>
+<p>de “ovo e galinha” da autorização. Esse gap só apareceu ao simular a</p>
+<p>entrega do zero (clonar o repositório, subir os containers e tentar</p>
+<p>logar), o que reforçou a importância de testar o fluxo completo a</p>
+<p>partir de um ambiente limpo, não só incrementalmente durante o</p>
+<p>desenvolvimento. A solução foi um script de seed idempotente</p>
+<p>(<code>backend/src/scripts/seed-admin.ts</code>) que cria um Administrador padrão</p>
+<p>apenas se nenhum usuário existir ainda.</p>
+<h2 id="video">6. Video</h2>
+<p><a href="https://youtu.be/YRWSrShEHRA">https://youtu.be/YRWSrShEHRA</a></p>
+</div>
+</body>
+
+</html>

@@ -30,7 +30,10 @@ export async function update(request: FastifyRequest, reply: FastifyReply) {
   }
 
   const updateUsuarioUseCase = makeUpdateUsuarioUseCase()
-  const usuario = await updateUsuarioUseCase.handler(id, dadosAtualizados)
+  const usuario = await updateUsuarioUseCase.handler(id, dadosAtualizados, {
+    id: request.user.sub,
+    tipo: request.user.tipo,
+  })
 
   return reply.status(200).send({
     id: usuario?.id,

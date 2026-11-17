@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify'
 import { create } from './create'
 import { findAllComentario } from './find-all'
+import { deleteComentario } from './delete'
 import { verifyJwt } from '../../middlewares/verify-jwt'
 import {
   comentarioBodySchema,
@@ -42,4 +43,19 @@ export async function comentarioRoutes(app: FastifyInstance) {
       response: { 200: { type: 'array', items: comentarioSchema } },
     },
   }, findAllComentario)
+
+  app.delete('/comments/:id', {
+    preHandler: [verifyJwt],
+    schema: {
+      tags: ['Comentários'],
+      summary:
+        'Exclui um comentário (autor do comentário, Professor ou Administrador)',
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: { id: { type: 'string' } },
+      },
+      response: { 204: { type: 'null' } },
+    },
+  }, deleteComentario)
 }

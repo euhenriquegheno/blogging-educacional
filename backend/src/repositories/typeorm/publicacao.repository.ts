@@ -1,6 +1,7 @@
 import { ILike, Repository } from 'typeorm'
 import { IPublicacaoRepository } from '../publicacao.repository.interface'
 import { Publicacao } from '../../entities/publicacao.entity'
+import { Comentario } from '../../entities/comentario.entity'
 import { appDataSource } from '../../lib/typeorm/typeorm'
 import { IPublicacao } from '../../entities/models/publicacao.interface'
 
@@ -74,8 +75,17 @@ export class PublicacaoRepository implements IPublicacaoRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.repository.delete(id)
+    return this.repository.manager.transaction(async (manager) => {
+      await manager
+        .createQueryBuilder()
+        .delete()
+        .from(Comentario)
+        .where('publicacao_id = :id', { id })
+        .execute()
 
-    return result.affected !== 0
+      const result = await manager.delete(Publicacao, id)
+
+      return result.affected !== 0
+    })
   }
 }

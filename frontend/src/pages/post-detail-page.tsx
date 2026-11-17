@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { CommentForm } from '../features/posts/components/comment-form'
 import { CommentList } from '../features/posts/components/comment-list'
-import { listComentarios } from '../features/posts/api/comentarios-api'
+import { deleteComentario, listComentarios } from '../features/posts/api/comentarios-api'
 import { getPost } from '../features/posts/api/posts-api'
 import type { Comentario } from '../types/comentario'
 import type { Publicacao } from '../types/publicacao'
@@ -50,6 +50,11 @@ export default function PostDetailPage() {
     setComentarios((atual) => [...atual, novoComentario])
   }
 
+  async function handleExcluirComentario(comentarioId: string) {
+    await deleteComentario(comentarioId)
+    setComentarios((atual) => atual.filter((c) => c.id !== comentarioId))
+  }
+
   if (carregando) {
     return <p className="p-6 text-sm text-gray-500">Carregando...</p>
   }
@@ -69,7 +74,7 @@ export default function PostDetailPage() {
 
       <section className="space-y-4">
         <h2 className="text-lg font-semibold text-gray-900">Comentários</h2>
-        <CommentList comentarios={comentarios} />
+        <CommentList comentarios={comentarios} onExcluir={handleExcluirComentario} />
         <CommentForm publicacaoId={id ?? ''} onComentarioCriado={handleComentarioCriado} />
       </section>
     </article>

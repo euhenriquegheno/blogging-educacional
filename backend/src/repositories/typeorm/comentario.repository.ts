@@ -39,6 +39,19 @@ export class ComentarioRepository implements IComentarioRepository {
     })
   }
 
+  async findById(id: string): Promise<IComentario | null> {
+    return this.repository.findOne({
+      select: {
+        id: true,
+        conteudo: true,
+        criadoEm: true,
+        usuario: { id: true, nome: true, email: true },
+      },
+      relations: { usuario: true },
+      where: { id },
+    })
+  }
+
   async delete(id: string): Promise<boolean> {
     const result = await this.repository.delete(id)
 

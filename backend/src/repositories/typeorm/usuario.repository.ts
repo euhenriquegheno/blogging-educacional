@@ -1,6 +1,7 @@
-import { Repository } from 'typeorm'
+import { Not, Repository } from 'typeorm'
+import { TipoUsuario } from '../../entities/models/tipo-usuario.enum'
 import { IUsuario } from '../../entities/models/usuario.interface'
-import { IUsuarioRepository } from '../usuario.repository.interface'
+import { FiltroUsuarios, IUsuarioRepository } from '../usuario.repository.interface'
 import { Usuario } from '../../entities/usuario.entity'
 import { appDataSource } from '../../lib/typeorm/typeorm'
 
@@ -15,8 +16,20 @@ export class UsuarioRepository implements IUsuarioRepository {
     return this.repository.save(usuario)
   }
 
-  async findAll(page: number, limit: number): Promise<IUsuario[]> {
+  async findAll(
+    page: number,
+    limit: number,
+    filtro: FiltroUsuarios = {},
+  ): Promise<IUsuario[]> {
+    const where = filtro.tipo
+      ? { tipo: filtro.tipo }
+      : filtro.excluirAdministradores
+        ? { tipo: Not(TipoUsuario.ADMINISTRADOR) }
+        : {}
+
     return this.repository.find({
+      where,
+      order: { nome: 'ASC' },
       select: {
         id: true,
         email: true,

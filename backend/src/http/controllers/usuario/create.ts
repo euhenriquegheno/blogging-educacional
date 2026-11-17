@@ -28,7 +28,10 @@ export async function create(request: FastifyRequest, reply: FastifyReply) {
 
   const createPessoaUseCase = makeCreateUsuarioUseCase()
 
-  const usuario = await createPessoaUseCase.handler(userWithHashedPassword)
+  const usuario = await createPessoaUseCase.handler(
+    userWithHashedPassword,
+    { id: request.user.sub, tipo: request.user.tipo },
+  )
 
   return reply.status(201).send({
     id: usuario?.id,

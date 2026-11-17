@@ -13,7 +13,10 @@ export async function findUsuario(
   const { id } = registerParamsSchema.parse(request.params)
   const findUsuarioUseCase = makeFindUsuarioUseCase()
 
-  const usuario = await findUsuarioUseCase.handler(id)
+  const usuario = await findUsuarioUseCase.handler(id, {
+    id: request.user.sub,
+    tipo: request.user.tipo,
+  })
 
   return reply.status(200).send(usuario)
 }

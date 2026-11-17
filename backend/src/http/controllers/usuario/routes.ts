@@ -4,14 +4,20 @@ import { findUsuario } from './find'
 import { findAllUsuarios } from './find-all'
 import { deleteUsuario } from './delete'
 import { update } from './update'
-import { usuarioBodySchema, usuarioSchema } from '../../swagger-schemas'
+import {
+  usuarioBodySchema,
+  usuarioSchema,
+  usuarioUpdateBodySchema,
+} from '../../swagger-schemas'
 import { verifyJwt } from '../../middlewares/verify-jwt'
 import { verifyUserType } from '../../middlewares/verify-user-type'
 import { TipoUsuario } from '../../../entities/models/tipo-usuario.enum'
 
+// Professor também gerencia professores e alunos; a regra "nunca contas de
+// Administrador" é aplicada nos casos de uso.
 const somenteAdministrador = [
   verifyJwt,
-  verifyUserType([TipoUsuario.ADMINISTRADOR]),
+  verifyUserType([TipoUsuario.ADMINISTRADOR, TipoUsuario.PROFESSOR]),
 ]
 
 export async function usuarioRoutes(app: FastifyInstance) {
@@ -59,6 +65,7 @@ export async function usuarioRoutes(app: FastifyInstance) {
           properties: {
             page: { type: 'number', default: 1 },
             limit: { type: 'number', default: 10 },
+            tipo: { type: 'number', description: 'Filtra por tipo (2=Professor, 3=Aluno)' },
           },
         },
         response: { 200: { type: 'array', items: usuarioSchema } },
@@ -97,7 +104,7 @@ export async function usuarioRoutes(app: FastifyInstance) {
           required: ['id'],
           properties: { id: { type: 'number' } },
         },
-        body: usuarioBodySchema,
+        body: usuarioUpdateBodySchema,
         response: { 200: usuarioSchema },
       },
     },

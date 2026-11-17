@@ -7,5 +7,6 @@ export interface IComentarioRepository {
     page: number,
     limit: number,
   ): Promise<IComentario[]>
+  findById(id: string): Promise<IComentario | null>
   delete(id: string): Promise<boolean>
 }

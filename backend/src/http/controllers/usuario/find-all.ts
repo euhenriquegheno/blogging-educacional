@@ -9,12 +9,16 @@ export async function findAllUsuarios(
   const registerQuerySchema = z.object({
     page: z.coerce.number().default(1),
     limit: z.coerce.number().default(10),
+    tipo: z.coerce.number().int().optional(),
   })
 
-  const { page, limit } = registerQuerySchema.parse(request.query)
+  const { page, limit, tipo } = registerQuerySchema.parse(request.query)
 
   const findAllUsuariosUseCase = makeFindAllUsuarioUseCase()
-  const usuarios = await findAllUsuariosUseCase.handler(page, limit)
+  const usuarios = await findAllUsuariosUseCase.handler(page, limit, tipo, {
+    id: request.user.sub,
+    tipo: request.user.tipo,
+  })
 
   return reply.status(200).send(usuarios)
 }

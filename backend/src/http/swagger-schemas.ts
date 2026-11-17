@@ -35,6 +35,11 @@ export const publicacaoBodySchema = {
   properties: {
     titulo: { type: 'string' },
     conteudo: { type: 'string' },
+    autorId: {
+      type: 'number',
+      description:
+        'Opcional. ID do autor (Professor/Administrador); padrão = usuário logado',
+    },
   },
 }
 
@@ -81,6 +86,26 @@ export const comentarioSchema = {
       properties: {
         id: { type: 'string' },
       },
+    },
+  },
+}
+
+export const usuarioUpdateBodySchema = {
+  type: 'object',
+  required: ['email', 'nome', 'cpf', 'tipo'],
+  properties: {
+    email: { type: 'string' },
+    senha: {
+      type: 'string',
+      format: 'password',
+      description: 'Opcional na edição: se omitida, a senha atual é mantida',
+    },
+    nome: { type: 'string' },
+    cpf: { type: 'string' },
+    tipo: {
+      type: 'number',
+      enum: tipoUsuarioValores,
+      description: 'Tipo do usuário (1=Administrador, 2=Professor, 3=Aluno)',
     },
   },
 }

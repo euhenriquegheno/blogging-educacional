@@ -19,3 +19,7 @@ export async function createComentario(publicacaoId: string, conteudo: string): 
     body: JSON.stringify({ conteudo }),
   })
 }
+
+export async function deleteComentario(id: string): Promise<void> {
+  await apiClient<void>(`/comments/${id}`, { method: 'DELETE' })
+}

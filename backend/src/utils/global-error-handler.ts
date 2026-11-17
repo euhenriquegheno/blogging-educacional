@@ -25,6 +25,9 @@ export const errorHandlerMap: ErrorHandlerMap = {
   ForbiddenError: (error, _, reply) => {
     return reply.status(403).send({ message: error.message })
   },
+  InvalidAuthorError: (error, _, reply) => {
+    return reply.status(400).send({ message: error.message })
+  },
 }
 
 export const globalErrorHandler = (
@@ -32,13 +35,18 @@ export const globalErrorHandler = (
   _: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  console.error(error)
-
   const handler = errorHandlerMap[error.constructor.name]
 
   if (handler) {
     return handler(error, _, reply)
   }
+
+  // Erros de validação de schema do Fastify (ex.: campo obrigatório ausente)
+  if ((error as { code?: string }).code === 'FST_ERR_VALIDATION') {
+    return reply.status(400).send({ message: 'Validation error' })
+  }
+
+  console.error(error)
 
   return reply.status(500).send({
     message: 'Internal server error',

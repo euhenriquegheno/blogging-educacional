@@ -177,10 +177,10 @@ describe('Guardas de autorização - rotas de usuario', () => {
     expect(response.statusCode).toBe(401)
   })
 
-  it('bloqueia todas as rotas de usuario para um PROFESSOR autenticado com 403', async () => {
+  it('bloqueia as rotas de usuario para um ALUNO autenticado com 403', async () => {
     const app = buildApp()
     await app.ready()
-    const token = app.jwt.sign({ sub: 1, tipo: TipoUsuario.PROFESSOR })
+    const token = app.jwt.sign({ sub: 1, tipo: TipoUsuario.ALUNO })
 
     const response = await app.inject({
       method: 'GET',
@@ -204,5 +204,45 @@ describe('Guardas de autorização - rotas de usuario', () => {
 
     expect(response.statusCode).not.toBe(401)
     expect(response.statusCode).not.toBe(403)
+  })
+})
+
+describe('Validação do corpo de /user', () => {
+  const semSenha = {
+    email: 'a@a.com',
+    nome: 'A',
+    cpf: '12345678900',
+    tipo: TipoUsuario.PROFESSOR,
+  }
+
+  it('PUT /user/:id aceita corpo sem senha (senha é opcional na edição)', async () => {
+    const app = buildApp()
+    await app.ready()
+    const token = app.jwt.sign({ sub: 1, tipo: TipoUsuario.PROFESSOR })
+
+    const response = await app.inject({
+      method: 'PUT',
+      url: '/user/1',
+      headers: { authorization: `Bearer ${token}` },
+      payload: semSenha,
+    })
+
+    // passa da validação de schema (sem banco de dados falha depois, com 500)
+    expect(response.statusCode).not.toBe(400)
+  })
+
+  it('POST /user continua exigindo senha', async () => {
+    const app = buildApp()
+    await app.ready()
+    const token = app.jwt.sign({ sub: 1, tipo: TipoUsuario.PROFESSOR })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/user',
+      headers: { authorization: `Bearer ${token}` },
+      payload: semSenha,
+    })
+
+    expect(response.statusCode).toBe(400)
   })
 })

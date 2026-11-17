@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Publicacao } from '../../../types/publicacao'
+import { formatarDataHora } from '../format-data'
 
 interface PostCardProps {
   post: Publicacao
@@ -26,7 +27,10 @@ export function PostCard({ post }: PostCardProps) {
           {post.titulo}
         </Link>
       </h2>
-      <p className="mt-1 text-sm text-gray-500">Por {post.usuario.nome}</p>
+      <p className="mt-1 text-sm text-gray-500">
+        Por {post.usuario.nome}
+        {post.criadoEm && ` • ${formatarDataHora(post.criadoEm)}`}
+      </p>
       <p className="mt-2 text-gray-700">{resumoConteudo(post.conteudo)}</p>
       <Link
         to={`/posts/${post.id}`}

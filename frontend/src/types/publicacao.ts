@@ -4,5 +4,6 @@ export interface Publicacao {
   id: string
   titulo: string
   conteudo: string
+  criadoEm?: string
   usuario: Usuario
 }

@@ -1,5 +1,6 @@
 import {
   Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -20,6 +21,9 @@ export class Publicacao implements IPublicacao {
 
   @Column({ name: 'conteudo', type: 'text' })
   conteudo!: string
+
+  @CreateDateColumn({ name: 'criado_em' })
+  criadoEm!: Date
 
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'usuario_id' })

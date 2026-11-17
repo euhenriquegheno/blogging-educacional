@@ -18,6 +18,7 @@ export class PublicacaoRepository implements IPublicacaoRepository {
         id: true,
         titulo: true,
         conteudo: true,
+        criadoEm: true,
         usuario: {
           id: true,
           nome: true,
@@ -25,6 +26,7 @@ export class PublicacaoRepository implements IPublicacaoRepository {
         },
       },
       relations: { usuario: true },
+      order: { criadoEm: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     })
@@ -36,6 +38,7 @@ export class PublicacaoRepository implements IPublicacaoRepository {
         id: true,
         titulo: true,
         conteudo: true,
+        criadoEm: true,
         usuario: {
           id: true,
           nome: true,
@@ -55,6 +58,7 @@ export class PublicacaoRepository implements IPublicacaoRepository {
         id: true,
         titulo: true,
         conteudo: true,
+        criadoEm: true,
         usuario: {
           id: true,
           nome: true,
@@ -63,6 +67,7 @@ export class PublicacaoRepository implements IPublicacaoRepository {
       },
       relations: { usuario: true },
       where: [{ titulo: matchingTerm }, { conteudo: matchingTerm }],
+      order: { criadoEm: 'DESC' },
     })
   }
 

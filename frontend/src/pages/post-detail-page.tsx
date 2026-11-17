@@ -4,6 +4,7 @@ import { CommentForm } from '../features/posts/components/comment-form'
 import { CommentList } from '../features/posts/components/comment-list'
 import { deleteComentario, listComentarios } from '../features/posts/api/comentarios-api'
 import { getPost } from '../features/posts/api/posts-api'
+import { formatarDataHora } from '../features/posts/format-data'
 import type { Comentario } from '../types/comentario'
 import type { Publicacao } from '../types/publicacao'
 
@@ -67,7 +68,10 @@ export default function PostDetailPage() {
     <article className="mx-auto max-w-2xl space-y-6 p-6">
       <header>
         <h1 className="text-2xl font-bold text-gray-900">{post.titulo}</h1>
-        <p className="text-sm text-gray-500">por {post.usuario.nome}</p>
+        <p className="text-sm text-gray-500">
+          por {post.usuario.nome}
+          {post.criadoEm && ` • ${formatarDataHora(post.criadoEm)}`}
+        </p>
       </header>
 
       <p className="whitespace-pre-line text-gray-800">{post.conteudo}</p>

@@ -25,6 +25,7 @@ export const publicacaoSchema = {
     id: { type: 'string', description: 'UUID da postagem' },
     titulo: { type: 'string' },
     conteudo: { type: 'string' },
+    criadoEm: { type: 'string', format: 'date-time' },
     usuario: usuarioSchema,
   },
 }
